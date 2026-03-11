@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Incident, Sources } from '../types';
 import { User, Calendar, CheckCircle2, Edit2, Search } from 'lucide-react';
+import SearchableSelect from '../components/SearchableSelect';
 
 interface AddEventProps {
   sources: Sources;
@@ -75,18 +76,13 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
         <form onSubmit={handleLogin} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">اسم الموظف / مناوب التشغيل</label>
-            <div className="relative">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <select 
-                required
-                className="w-full border border-slate-300 rounded-lg p-3 pr-10 focus:ring-2 focus:ring-blue-500 appearance-none"
-                value={loginForm.employeeName}
-                onChange={e => setLoginForm({...loginForm, employeeName: e.target.value})}
-              >
-                <option value="">ابحث عن اسمك أو قم بإضافته...</option>
-                {sources.employees.map(emp => <option key={emp} value={emp}>{emp}</option>)}
-              </select>
-            </div>
+            <SearchableSelect
+              options={sources.employees}
+              value={loginForm.employeeName}
+              onChange={(val) => setLoginForm({...loginForm, employeeName: val})}
+              placeholder="ابحث عن اسمك أو قم بإضافته..."
+              required
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1 flex items-center gap-2">
@@ -135,30 +131,36 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 text-right">الإدارة / المنطقة</label>
-              <select required className="w-full border border-slate-300 rounded-lg p-3 text-right"
-                value={formData.region} onChange={e => setFormData({...formData, region: e.target.value})}>
-                <option value="">اكتب أو اختر إدارة...</option>
-                {sources.regions.map(r => <option key={r} value={r}>{r}</option>)}
-              </select>
+              <SearchableSelect
+                options={sources.regions}
+                value={formData.region || ''}
+                onChange={(val) => setFormData({...formData, region: val})}
+                placeholder="اكتب أو اختر إدارة..."
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 text-right">اسم المحطة</label>
-              <select required className="w-full border border-slate-300 rounded-lg p-3 text-right"
-                value={formData.station} onChange={e => setFormData({...formData, station: e.target.value})}>
-                <option value="">اكتب أو اختر محطة...</option>
-                {sources.stations.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <SearchableSelect
+                options={sources.stations}
+                value={formData.station || ''}
+                onChange={(val) => setFormData({...formData, station: val})}
+                placeholder="اكتب أو اختر محطة..."
+                required
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 text-right">المعدة (النوع والاسم)</label>
-              <select required className="w-full border border-slate-300 rounded-lg p-3 text-right"
-                value={formData.equipment} onChange={e => setFormData({...formData, equipment: e.target.value})}>
-                <option value="">مثال: الربط، المحول...</option>
-                {sources.equipments.map(e => <option key={e} value={e}>{e}</option>)}
-              </select>
+              <SearchableSelect
+                options={sources.equipments}
+                value={formData.equipment || ''}
+                onChange={(val) => setFormData({...formData, equipment: val})}
+                placeholder="مثال: الربط، المحول..."
+                required
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 text-right">رقم المعدة</label>
@@ -167,11 +169,13 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2 text-right">الجهد (ك.ف)</label>
-              <select required className="w-full border border-slate-300 rounded-lg p-3 text-right"
-                value={formData.voltage} onChange={e => setFormData({...formData, voltage: e.target.value})}>
-                <option value="">مثال: 30</option>
-                {sources.voltages.map(v => <option key={v} value={v}>{v}</option>)}
-              </select>
+              <SearchableSelect
+                options={sources.voltages}
+                value={formData.voltage || ''}
+                onChange={(val) => setFormData({...formData, voltage: val})}
+                placeholder="مثال: 30"
+                required
+              />
             </div>
           </div>
         </div>
@@ -227,11 +231,13 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
         <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2 text-right">سبب الخروج</label>
-            <select required className="w-full border border-slate-300 rounded-lg p-3 text-right"
-              value={formData.reason} onChange={e => setFormData({...formData, reason: e.target.value})}>
-              <option value="">اكتب أو اختر السبب الأساسي...</option>
-              {sources.reasons.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
+            <SearchableSelect
+              options={sources.reasons}
+              value={formData.reason || ''}
+              onChange={(val) => setFormData({...formData, reason: val})}
+              placeholder="اكتب أو اختر السبب الأساسي..."
+              required
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2 text-right">الملاحظات والإجراءات المتخذة (اختياري)</label>
