@@ -134,7 +134,7 @@ export default function App() {
       case 'disconnected':
         return <DisconnectedLines incidents={incidents} onEdit={handleEditIncident} />;
       case 'add-event':
-        return <AddEvent sources={sources} session={session} setSession={setSession} onSave={handleAddIncident} />;
+        return <AddEvent sources={sources} session={session} setSession={setSession} onSave={handleAddIncident} setSources={handleUpdateSources} />;
       case 'manage-sources':
         return <ManageSources sources={sources} setSources={handleUpdateSources} />;
       case 'backup':

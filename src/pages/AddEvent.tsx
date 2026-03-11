@@ -8,9 +8,10 @@ interface AddEventProps {
   session: { employeeName: string; date: string } | null;
   setSession: (session: { employeeName: string; date: string } | null) => void;
   onSave: (incident: Incident) => void;
+  setSources?: (sources: Sources) => void;
 }
 
-export default function AddEvent({ sources, session, setSession, onSave }: AddEventProps) {
+export default function AddEvent({ sources, session, setSession, onSave, setSources }: AddEventProps) {
   const [loginForm, setLoginForm] = useState({
     employeeName: '',
     date: new Date().toISOString().split('T')[0]
@@ -34,6 +35,13 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (loginForm.employeeName && loginForm.date) {
+      // Check if employee is new
+      if (setSources && !sources.employees.includes(loginForm.employeeName)) {
+        setSources({
+          ...sources,
+          employees: [...sources.employees, loginForm.employeeName]
+        });
+      }
       setSession(loginForm);
       setFormData(prev => ({ ...prev, date: loginForm.date, employeeName: loginForm.employeeName }));
     }
@@ -41,6 +49,36 @@ export default function AddEvent({ sources, session, setSession, onSave }: AddEv
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check for new sources
+    let sourcesUpdated = false;
+    const newSources = { ...sources };
+    
+    if (formData.region && !newSources.regions.includes(formData.region)) {
+      newSources.regions = [...newSources.regions, formData.region];
+      sourcesUpdated = true;
+    }
+    if (formData.station && !newSources.stations.includes(formData.station)) {
+      newSources.stations = [...newSources.stations, formData.station];
+      sourcesUpdated = true;
+    }
+    if (formData.equipment && !newSources.equipments.includes(formData.equipment)) {
+      newSources.equipments = [...newSources.equipments, formData.equipment];
+      sourcesUpdated = true;
+    }
+    if (formData.voltage && !newSources.voltages.includes(formData.voltage)) {
+      newSources.voltages = [...newSources.voltages, formData.voltage];
+      sourcesUpdated = true;
+    }
+    if (formData.reason && !newSources.reasons.includes(formData.reason)) {
+      newSources.reasons = [...newSources.reasons, formData.reason];
+      sourcesUpdated = true;
+    }
+
+    if (sourcesUpdated && setSources) {
+      setSources(newSources);
+    }
+
     onSave({
       ...formData,
       disconnectTime: timeType === 'previous' ? 'فصل سابق' : formData.disconnectTime,
