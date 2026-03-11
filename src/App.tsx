@@ -86,7 +86,9 @@ export default function App() {
 
   const handleUpdateSources = async (newSources: Sources) => {
     try {
-      await setDoc(doc(db, 'settings', 'sources'), newSources);
+      // Sanitize undefined values for Firestore
+      const sanitizedSources = JSON.parse(JSON.stringify(newSources));
+      await setDoc(doc(db, 'settings', 'sources'), sanitizedSources);
     } catch (error) {
       console.error("Error updating sources: ", error);
       alert("حدث خطأ أثناء تحديث المصادر");
@@ -98,7 +100,8 @@ export default function App() {
       const batch = writeBatch(db);
       
       // Update sources
-      batch.set(doc(db, 'settings', 'sources'), newSources);
+      const sanitizedSources = JSON.parse(JSON.stringify(newSources));
+      batch.set(doc(db, 'settings', 'sources'), sanitizedSources);
       
       // Delete all existing incidents first
       const snapshot = await getDocs(collection(db, 'incidents'));

@@ -21,4 +21,8 @@ export interface Sources {
   voltages: string[];
   reasons: string[];
   employees: string[];
+  printSettings?: {
+    headerImage?: string | null;
+    coverImage?: string | null;
+  };
 }

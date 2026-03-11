@@ -1,26 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Sources } from '../types';
-import { Database, Download, Upload, Plus, Trash2 } from 'lucide-react';
+import { Database, Download, Upload, Plus, Trash2, Image as ImageIcon, X } from 'lucide-react';
 
 interface ManageSourcesProps {
   sources: Sources;
-  setSources: React.Dispatch<React.SetStateAction<Sources>>;
+  setSources: (sources: Sources) => void;
 }
 
 export default function ManageSources({ sources, setSources }: ManageSourcesProps) {
+  const headerInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
   const renderCard = (title: string, key: keyof Sources, colorClass: string) => {
-    const items = sources[key];
+    // Skip printSettings in this generic renderer
+    if (key === 'printSettings') return null;
+    
+    const items = sources[key] as string[];
     const [newItem, setNewItem] = useState('');
 
     const handleAdd = () => {
       if (newItem.trim() && !items.includes(newItem.trim())) {
-        setSources(prev => ({ ...prev, [key]: [...prev[key], newItem.trim()] }));
+        setSources({ ...sources, [key]: [...items, newItem.trim()] });
         setNewItem('');
       }
     };
 
     const handleDelete = (item: string) => {
-      setSources(prev => ({ ...prev, [key]: prev[key].filter(i => i !== item) }));
+      setSources({ ...sources, [key]: items.filter(i => i !== item) });
     };
 
     return (
@@ -58,17 +64,42 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
     );
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'headerImage' | 'coverImage') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1024 * 1024) { // 1MB limit
+      alert('حجم الصورة كبير جداً. يرجى اختيار صورة بحجم أقل من 1 ميجابايت.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setSources({
+        ...sources,
+        printSettings: {
+          ...sources.printSettings,
+          [type]: base64String
+        }
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = (type: 'headerImage' | 'coverImage') => {
+    setSources({
+      ...sources,
+      printSettings: {
+        ...sources.printSettings,
+        [type]: null
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex gap-3">
-          <button className="flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-emerald-700">
-            <Upload className="w-4 h-4" /> استعادة نسخة
-          </button>
-          <button className="flex items-center gap-2 bg-slate-800 text-white px-4 py-2 rounded-lg text-sm hover:bg-slate-700">
-            <Download className="w-4 h-4" /> تحميل نسخة احتياطية
-          </button>
-        </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
             <h2 className="font-bold text-slate-800">إدارة البيانات الأساسية للنظام</h2>
@@ -76,6 +107,91 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
           </div>
           <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
             <Database className="w-6 h-6" />
+          </div>
+        </div>
+      </div>
+
+      {/* Print Settings Section */}
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-slate-50">
+          <h3 className="font-bold text-slate-800 flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-slate-500" />
+            إعدادات الطباعة (الصور والشعارات)
+          </h3>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Header Image */}
+          <div className="flex flex-col gap-3">
+            <label className="font-bold text-slate-700">شعار التقرير (الصورة 666)</label>
+            <p className="text-xs text-slate-500">هذه الصورة ستظهر في أعلى كل صفحة عند طباعة التقرير.</p>
+            
+            <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center min-h-[150px] relative bg-slate-50">
+              {sources.printSettings?.headerImage ? (
+                <>
+                  <img src={sources.printSettings.headerImage} alt="Header Logo" className="max-h-32 object-contain" />
+                  <button 
+                    onClick={() => removeImage('headerImage')}
+                    className="absolute top-2 right-2 bg-red-100 text-red-600 p-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <div className="text-center">
+                  <ImageIcon className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <button 
+                    onClick={() => headerInputRef.current?.click()}
+                    className="text-sm bg-white border border-slate-200 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                  >
+                    اختيار صورة
+                  </button>
+                </div>
+              )}
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                ref={headerInputRef}
+                onChange={(e) => handleImageUpload(e, 'headerImage')}
+              />
+            </div>
+          </div>
+
+          {/* Cover Image */}
+          <div className="flex flex-col gap-3">
+            <label className="font-bold text-slate-700">شعار الغلاف (اختياري)</label>
+            <p className="text-xs text-slate-500">هذه الصورة ستظهر كشعار في منتصف صفحة الغلاف. إذا لم تقم برفع صورة، سيتم استخدام الشعار الافتراضي.</p>
+            
+            <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 flex flex-col items-center justify-center min-h-[150px] relative bg-slate-50">
+              {sources.printSettings?.coverImage ? (
+                <>
+                  <img src={sources.printSettings.coverImage} alt="Cover Page" className="max-h-32 object-contain" />
+                  <button 
+                    onClick={() => removeImage('coverImage')}
+                    className="absolute top-2 right-2 bg-red-100 text-red-600 p-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <div className="text-center">
+                  <ImageIcon className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <button 
+                    onClick={() => coverInputRef.current?.click()}
+                    className="text-sm bg-white border border-slate-200 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors"
+                  >
+                    اختيار صورة
+                  </button>
+                </div>
+              )}
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                ref={coverInputRef}
+                onChange={(e) => handleImageUpload(e, 'coverImage')}
+              />
+            </div>
           </div>
         </div>
       </div>

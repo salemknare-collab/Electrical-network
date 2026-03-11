@@ -18,6 +18,7 @@ body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     background-color: white !important;
+    overflow: visible !important;
   }
 
   /* Force all flex/grid containers to block for printing to avoid truncation */
@@ -26,10 +27,27 @@ body {
   main {
     display: block !important;
     height: auto !important;
+    min-height: auto !important;
     overflow: visible !important;
     width: 100% !important;
+    max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
+    position: static !important;
+  }
+
+  /* Ensure the main container doesn't hide overflow during print */
+  .overflow-hidden,
+  .overflow-y-auto,
+  .overflow-x-auto {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  /* Hide scrollbars during print */
+  ::-webkit-scrollbar {
+    display: none !important;
   }
 
   /* Table specific print fixes */
