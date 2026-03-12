@@ -20,7 +20,7 @@ export default function App() {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [sources, setSources] = useState<Sources>(initialSources);
   const [session, setSession] = useState<{ employeeName: string; date: string } | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState<Incident | null>(null);
   const [loading, setLoading] = useState(true);
 
