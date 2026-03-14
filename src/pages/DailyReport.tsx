@@ -14,7 +14,8 @@ interface DailyReportProps {
 
 export default function DailyReport({ incidents, sources, onDelete, onEdit }: DailyReportProps) {
   const [filters, setFilters] = useState({
-    date: new Date().toISOString().split('T')[0],
+    dateFrom: new Date().toISOString().split('T')[0],
+    dateTo: new Date().toISOString().split('T')[0],
     region: '',
     station: '',
     equipment: '',
@@ -28,7 +29,8 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
 
   const filteredIncidents = incidents.filter(inc => {
     return (
-      (!filters.date || inc.date === filters.date) &&
+      (!filters.dateFrom || inc.date >= filters.dateFrom) &&
+      (!filters.dateTo || inc.date <= filters.dateTo) &&
       (!filters.region || inc.region === filters.region) &&
       (!filters.station || inc.station === filters.station) &&
       (!filters.equipment || inc.equipment === filters.equipment) &&
@@ -63,8 +65,12 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
           `}
 
           <div style="width: 100%; background-color: #ffedd5; border-top: 4px solid #fed7aa; border-bottom: 4px solid #fed7aa; padding: 12px 24px; margin-bottom: 20px; display: flex; justify-content: center; gap: 60px; align-items: center; font-size: 18px; font-weight: bold; color: #1e3a8a; box-sizing: border-box;">
-            <div>التقرير اليومي ليوم : <span style="color: #dc2626; margin-right: 8px;">${getDayName(filters.date)}</span></div>
-            <div>الموافق <span style="color: #dc2626; margin-right: 8px;">${formatDate(filters.date)}</span></div>
+            ${filters.dateFrom === filters.dateTo 
+              ? `<div>التقرير اليومي ليوم : <span style="color: #dc2626; margin-right: 8px;">${getDayName(filters.dateFrom)}</span></div>
+                 <div>الموافق <span style="color: #dc2626; margin-right: 8px;">${formatDate(filters.dateFrom)}</span></div>`
+              : `<div>التقرير من : <span style="color: #dc2626; margin-right: 8px;">${formatDate(filters.dateFrom)}</span></div>
+                 <div>إلى : <span style="color: #dc2626; margin-right: 8px;">${formatDate(filters.dateTo)}</span></div>`
+            }
           </div>
           
           <h4 style="font-size: 22px; font-weight: bold; color: #1e3a8a; border-bottom: 4px solid #1e3a8a; padding-bottom: 10px; display: inline-block; margin-bottom: 20px;">للخطوط و المحولات المفصولة بالوقاية وللصيانة</h4>
@@ -236,8 +242,17 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
 
           {/* Date Banner */}
           <div className="w-full bg-orange-100 border-y-4 border-orange-200 py-3 px-6 mb-6 flex justify-between items-center text-lg font-bold text-blue-900">
-            <div>التقرير اليومي ليوم : <span className="text-red-600 mr-2">{getDayName(filters.date)}</span></div>
-            <div>الموافق <span className="text-red-600 mr-2">{formatDate(filters.date)}</span></div>
+            {filters.dateFrom === filters.dateTo ? (
+              <>
+                <div>التقرير اليومي ليوم : <span className="text-red-600 mr-2">{getDayName(filters.dateFrom)}</span></div>
+                <div>الموافق <span className="text-red-600 mr-2">{formatDate(filters.dateFrom)}</span></div>
+              </>
+            ) : (
+              <>
+                <div>التقرير من : <span className="text-red-600 mr-2">{formatDate(filters.dateFrom)}</span></div>
+                <div>إلى : <span className="text-red-600 mr-2">{formatDate(filters.dateTo)}</span></div>
+              </>
+            )}
           </div>
           
           <h4 className="text-xl font-bold text-blue-900 mb-8 border-b-4 border-blue-900 pb-2 inline-block">للخطوط و المحولات المفصولة بالوقاية وللصيانة</h4>
@@ -285,11 +300,16 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
           <Filter className="w-5 h-5 text-blue-500" />
           <h3 className="font-bold">تصفية بـ:</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4">
           <div>
-            <label className="block text-xs text-slate-500 mb-1">التاريخ</label>
+            <label className="block text-xs text-slate-500 mb-1">من تاريخ</label>
             <input type="date" className="w-full text-sm border border-slate-200 rounded p-2" 
-              value={filters.date} onChange={e => setFilters({...filters, date: e.target.value})} />
+              value={filters.dateFrom} onChange={e => setFilters({...filters, dateFrom: e.target.value})} />
+          </div>
+          <div>
+            <label className="block text-xs text-slate-500 mb-1">إلى تاريخ</label>
+            <input type="date" className="w-full text-sm border border-slate-200 rounded p-2" 
+              value={filters.dateTo} onChange={e => setFilters({...filters, dateTo: e.target.value})} />
           </div>
           <div>
             <label className="block text-xs text-slate-500 mb-1">الإدارة</label>
