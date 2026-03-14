@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Sources } from '../types';
-import { Database, Download, Upload, Plus, Trash2, Image as ImageIcon, X, Settings } from 'lucide-react';
+import { Database, Download, Upload, Plus, Trash2, Image as ImageIcon, X, Settings, Save } from 'lucide-react';
 
 interface ManageSourcesProps {
   sources: Sources;
@@ -10,6 +10,36 @@ interface ManageSourcesProps {
 export default function ManageSources({ sources, setSources }: ManageSourcesProps) {
   const headerInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const [localPrintSettings, setLocalPrintSettings] = useState({
+    pdfMargin: sources.printSettings?.pdfMargin ?? 0.15,
+    pdfScale: sources.printSettings?.pdfScale ?? 1.5,
+    pdfFontSize: sources.printSettings?.pdfFontSize ?? 11,
+    printFontSize: sources.printSettings?.printFontSize ?? 11,
+  });
+
+  useEffect(() => {
+    setLocalPrintSettings({
+      pdfMargin: sources.printSettings?.pdfMargin ?? 0.15,
+      pdfScale: sources.printSettings?.pdfScale ?? 1.5,
+      pdfFontSize: sources.printSettings?.pdfFontSize ?? 11,
+      printFontSize: sources.printSettings?.printFontSize ?? 11,
+    });
+  }, [sources.printSettings]);
+
+  const handleLocalSettingChange = (key: keyof typeof localPrintSettings, value: number) => {
+    setLocalPrintSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const savePrintSettings = () => {
+    setSources({
+      ...sources,
+      printSettings: {
+        ...sources.printSettings,
+        ...localPrintSettings
+      }
+    });
+  };
 
   const renderCard = (title: string, key: keyof Sources, colorClass: string) => {
     // Skip printSettings in this generic renderer
@@ -97,16 +127,6 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
     });
   };
 
-  const handleSettingChange = (key: 'pdfMargin' | 'pdfScale' | 'pdfFontSize' | 'printFontSize', value: number) => {
-    setSources({
-      ...sources,
-      printSettings: {
-        ...sources.printSettings,
-        [key]: value
-      }
-    });
-  };
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -123,9 +143,18 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
 
       {/* Print Settings Section */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
-          <Settings className="w-5 h-5 text-slate-500" />
-          <h3 className="font-bold text-slate-800">إعدادات الطباعة والتصدير</h3>
+        <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-slate-500" />
+            <h3 className="font-bold text-slate-800">إعدادات الطباعة والتصدير</h3>
+          </div>
+          <button 
+            onClick={savePrintSettings}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            <Save className="w-4 h-4" />
+            حفظ الإعدادات
+          </button>
         </div>
         
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 border-b border-slate-100">
@@ -135,8 +164,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
               type="number" 
               step="0.05"
               className="border border-slate-300 rounded-lg p-2 text-left"
-              value={sources.printSettings?.pdfMargin ?? 0.15}
-              onChange={(e) => handleSettingChange('pdfMargin', parseFloat(e.target.value))}
+              value={localPrintSettings.pdfMargin}
+              onChange={(e) => handleLocalSettingChange('pdfMargin', parseFloat(e.target.value))}
             />
             <span className="text-xs text-slate-500">القيمة الافتراضية: 0.15</span>
           </div>
@@ -147,8 +176,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
               type="number" 
               step="0.5"
               className="border border-slate-300 rounded-lg p-2 text-left"
-              value={sources.printSettings?.pdfScale ?? 1.5}
-              onChange={(e) => handleSettingChange('pdfScale', parseFloat(e.target.value))}
+              value={localPrintSettings.pdfScale}
+              onChange={(e) => handleLocalSettingChange('pdfScale', parseFloat(e.target.value))}
             />
             <span className="text-xs text-slate-500">القيمة الافتراضية: 1.5</span>
           </div>
@@ -158,8 +187,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
             <input 
               type="number" 
               className="border border-slate-300 rounded-lg p-2 text-left"
-              value={sources.printSettings?.pdfFontSize ?? 11}
-              onChange={(e) => handleSettingChange('pdfFontSize', parseInt(e.target.value))}
+              value={localPrintSettings.pdfFontSize}
+              onChange={(e) => handleLocalSettingChange('pdfFontSize', parseInt(e.target.value))}
             />
             <span className="text-xs text-slate-500">القيمة الافتراضية: 11</span>
           </div>
@@ -169,8 +198,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
             <input 
               type="number" 
               className="border border-slate-300 rounded-lg p-2 text-left"
-              value={sources.printSettings?.printFontSize ?? 11}
-              onChange={(e) => handleSettingChange('printFontSize', parseInt(e.target.value))}
+              value={localPrintSettings.printFontSize}
+              onChange={(e) => handleLocalSettingChange('printFontSize', parseInt(e.target.value))}
             />
             <span className="text-xs text-slate-500">القيمة الافتراضية: 11</span>
           </div>
