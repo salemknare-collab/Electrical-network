@@ -24,5 +24,9 @@ export interface Sources {
   printSettings?: {
     headerImage?: string | null;
     coverImage?: string | null;
+    pdfMargin?: number;
+    pdfScale?: number;
+    pdfFontSize?: number;
+    printFontSize?: number;
   };
 }

@@ -132,7 +132,7 @@ export default function App() {
       case 'daily-report':
         return <DailyReport incidents={incidents} sources={sources} onDelete={handleDeleteIncident} onEdit={handleEditIncident} />;
       case 'disconnected':
-        return <DisconnectedLines incidents={incidents} onEdit={handleEditIncident} />;
+        return <DisconnectedLines incidents={incidents} sources={sources} onEdit={handleEditIncident} />;
       case 'add-event':
         return <AddEvent sources={sources} session={session} setSession={setSession} onSave={handleAddIncident} setSources={handleUpdateSources} />;
       case 'manage-sources':

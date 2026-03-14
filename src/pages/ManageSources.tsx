@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Sources } from '../types';
-import { Database, Download, Upload, Plus, Trash2, Image as ImageIcon, X } from 'lucide-react';
+import { Database, Download, Upload, Plus, Trash2, Image as ImageIcon, X, Settings } from 'lucide-react';
 
 interface ManageSourcesProps {
   sources: Sources;
@@ -97,6 +97,16 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
     });
   };
 
+  const handleSettingChange = (key: 'pdfMargin' | 'pdfScale' | 'pdfFontSize' | 'printFontSize', value: number) => {
+    setSources({
+      ...sources,
+      printSettings: {
+        ...sources.printSettings,
+        [key]: value
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
@@ -113,10 +123,63 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
 
       {/* Print Settings Section */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
+          <Settings className="w-5 h-5 text-slate-500" />
+          <h3 className="font-bold text-slate-800">إعدادات الطباعة والتصدير</h3>
+        </div>
+        
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 border-b border-slate-100">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">هوامش ملف الـ PDF</label>
+            <input 
+              type="number" 
+              step="0.05"
+              className="border border-slate-300 rounded-lg p-2 text-left"
+              value={sources.printSettings?.pdfMargin ?? 0.15}
+              onChange={(e) => handleSettingChange('pdfMargin', parseFloat(e.target.value))}
+            />
+            <span className="text-xs text-slate-500">القيمة الافتراضية: 0.15</span>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">دقة ملف الـ PDF (Scale)</label>
+            <input 
+              type="number" 
+              step="0.5"
+              className="border border-slate-300 rounded-lg p-2 text-left"
+              value={sources.printSettings?.pdfScale ?? 1.5}
+              onChange={(e) => handleSettingChange('pdfScale', parseFloat(e.target.value))}
+            />
+            <span className="text-xs text-slate-500">القيمة الافتراضية: 1.5</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">حجم الخط في الـ PDF (px)</label>
+            <input 
+              type="number" 
+              className="border border-slate-300 rounded-lg p-2 text-left"
+              value={sources.printSettings?.pdfFontSize ?? 11}
+              onChange={(e) => handleSettingChange('pdfFontSize', parseInt(e.target.value))}
+            />
+            <span className="text-xs text-slate-500">القيمة الافتراضية: 11</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">حجم الخط للطباعة المباشرة (px)</label>
+            <input 
+              type="number" 
+              className="border border-slate-300 rounded-lg p-2 text-left"
+              value={sources.printSettings?.printFontSize ?? 11}
+              onChange={(e) => handleSettingChange('printFontSize', parseInt(e.target.value))}
+            />
+            <span className="text-xs text-slate-500">القيمة الافتراضية: 11</span>
+          </div>
+        </div>
+
         <div className="p-4 border-b border-slate-100 bg-slate-50">
           <h3 className="font-bold text-slate-800 flex items-center gap-2">
             <ImageIcon className="w-5 h-5 text-slate-500" />
-            إعدادات الطباعة (الصور والشعارات)
+            الصور والشعارات
           </h3>
         </div>
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">

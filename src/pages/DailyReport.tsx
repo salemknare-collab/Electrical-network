@@ -102,7 +102,7 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
           </div>
         `}
         <h2 style="text-align: center; margin-bottom: 15px; color: #000; font-size: 20px; font-weight: bold;">التقرير اليومي لوضعية معدات شبكة الجهد المتوسط</h2>
-        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; border: 2px solid black; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" dir="rtl">
+        <table style="width: 100%; border-collapse: collapse; font-size: ${sources.printSettings?.pdfFontSize ?? 11}px; text-align: center; border: 2px solid black; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" dir="rtl">
           <thead>
             <tr>
               <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">المحطة</th>
@@ -149,11 +149,11 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     `;
 
     const opt = {
-      margin:       0.15,
+      margin:       sources.printSettings?.pdfMargin ?? 0.15,
       filename:     `${reportName || 'تقرير_الأعطال'}.pdf`,
-      image:        { type: 'jpeg', quality: 0.95 },
-      html2canvas:  { scale: 1.5, useCORS: true, logging: false },
-      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+      image:        { type: 'jpeg' as const, quality: 0.95 },
+      html2canvas:  { scale: sources.printSettings?.pdfScale ?? 1.5, useCORS: true, logging: false },
+      jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' as const }
     };
     
     html2pdf().set(opt).from(htmlContent).save();
@@ -261,9 +261,13 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
   };
 
   return (
-    <div className="flex flex-col gap-6 relative print:block print:bg-white print:m-0 print:p-0">
+    <div className="flex flex-col gap-6 relative print:block print:bg-white print:m-0 print:p-0" style={{ '--print-font-size': `${sources.printSettings?.printFontSize ?? 11}px` } as React.CSSProperties}>
       <style type="text/css" media="print">
-        {`@page { size: portrait; margin: 10mm; }`}
+        {`@page { size: portrait; margin: 10mm; }
+          @media print {
+            table { font-size: var(--print-font-size) !important; }
+          }
+        `}
       </style>
       {/* Cover Page (Print Only) */}
       <div className="hidden print:flex flex-col items-center justify-center h-[250mm] w-full bg-white text-center break-after-page pt-2 pb-4">
@@ -450,7 +454,7 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
         {reportName && <div className="hidden print:block text-center text-xl font-bold py-4 border-b mb-4">{reportName}</div>}
         
         <div className="overflow-x-auto print:overflow-visible print:block">
-          <table className="w-full text-center text-sm print:text-[11px] border-collapse border-2 border-black">
+          <table className="w-full text-center text-sm border-collapse border-2 border-black" style={{ fontSize: `var(--print-font-size, 11px)` }}>
             <thead className="bg-[#fcebeb] text-black">
               <tr>
                 <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">المحطة</th>

@@ -1,13 +1,14 @@
 import React from 'react';
-import { Incident } from '../types';
+import { Incident, Sources } from '../types';
 import { Printer, AlertTriangle } from 'lucide-react';
 
 interface DisconnectedLinesProps {
   incidents: Incident[];
+  sources: Sources;
   onEdit: (incident: Incident) => void;
 }
 
-export default function DisconnectedLines({ incidents, onEdit }: DisconnectedLinesProps) {
+export default function DisconnectedLines({ incidents, sources, onEdit }: DisconnectedLinesProps) {
   const disconnected = incidents.filter(i => i.status === 'مفصول');
 
   const handlePrint = () => {
@@ -15,9 +16,13 @@ export default function DisconnectedLines({ incidents, onEdit }: DisconnectedLin
   };
 
   return (
-    <div className="flex flex-col gap-6 print:block">
+    <div className="flex flex-col gap-6 print:block" style={{ '--print-font-size': `${sources.printSettings?.printFontSize ?? 11}px` } as React.CSSProperties}>
       <style type="text/css" media="print">
-        {`@page { size: portrait; margin: 10mm; }`}
+        {`@page { size: portrait; margin: 10mm; }
+          @media print {
+            table { font-size: var(--print-font-size) !important; }
+          }
+        `}
       </style>
       <div className="flex justify-between items-center print:hidden">
         <button onClick={handlePrint} className="flex items-center gap-2 bg-white border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm hover:bg-red-50">
@@ -32,7 +37,7 @@ export default function DisconnectedLines({ incidents, onEdit }: DisconnectedLin
           <p className="text-sm print:hidden">القائمة التالية تتطلب متابعة لإرجاعها للخدمة.</p>
         </div>
         <div className="overflow-x-auto print:overflow-visible print:block">
-          <table className="w-full text-right text-sm print:text-[11px]">
+          <table className="w-full text-right text-sm" style={{ fontSize: `var(--print-font-size, 11px)` }}>
             <thead className="bg-slate-50 border-b border-slate-200 text-slate-700">
               <tr>
                 <th className="px-4 py-3 print:px-2 print:py-2 font-semibold">التاريخ</th>
