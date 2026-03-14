@@ -40,16 +40,22 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     );
   });
 
+  const groupedIncidents = filteredIncidents.reduce((acc, inc) => {
+    if (!acc[inc.region]) acc[inc.region] = [];
+    acc[inc.region].push(inc);
+    return acc;
+  }, {} as Record<string, Incident[]>);
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPDF = () => {
     const htmlContent = `
-      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; padding: 20px; background-color: white; width: 794px;">
+      <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; padding: 10px; background-color: white; width: 100%;">
         
         <!-- Cover Page -->
-        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 950px; text-align: center; page-break-after: always; padding-top: 10px; box-sizing: border-box;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 1050px; text-align: center; page-break-after: always; padding-top: 10px; box-sizing: border-box;">
           <h1 style="font-size: 38px; font-weight: bold; color: #1e40af; margin-bottom: 15px;">الشركة العامة للكهرباء</h1>
           <h2 style="font-size: 28px; font-weight: bold; color: #dc2626; margin-bottom: 15px;">الإدارة العامة لشبكات الجهد المتوسط</h2>
           <h3 style="font-size: 22px; font-weight: bold; color: #dc2626; margin-bottom: 30px;">إدارة تخطيط التشغيل</h3>
@@ -95,38 +101,46 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             <h2 style="font-size: 18px; color: #cbd5e1; margin: 0;">إدارة تخطيط التشغيل</h2>
           </div>
         `}
-        ${reportName ? `<h2 style="text-align: center; margin-bottom: 20px; color: #0f172a;">${reportName}</h2>` : ''}
-        <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: right;">
+        <h2 style="text-align: center; margin-bottom: 15px; color: #000; font-size: 20px; font-weight: bold;">التقرير اليومي لوضعية معدات شبكة الجهد المتوسط</h2>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; border: 2px solid black; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" dir="rtl">
           <thead>
             <tr>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; white-space: nowrap;">الإدارة</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; white-space: nowrap;">المحطة</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; white-space: nowrap;">المعدة</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; white-space: nowrap;">رقم المعدة</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; white-space: nowrap;">الجهد</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #dc2626; white-space: nowrap;">الفصل</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #059669; white-space: nowrap;">التوصيل</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; width: 30%;">السبب</th>
-              <th style="padding: 10px 8px; border: 1px solid #cbd5e1; background-color: #f8fafc; color: #0f172a; width: 30%;">ملاحظات</th>
+              <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">المحطة</th>
+              <th colspan="4" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">بيانات المعدة</th>
+              <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">ساعة<br/>الفصل</th>
+              <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">ساعة<br/>التوصيل</th>
+              <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">أسباب الخروج</th>
+              <th rowspan="2" style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">الملاحظات<br/>والاجراءات</th>
+            </tr>
+            <tr>
+              <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold;">إسم المعدة</th>
+              <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold; font-size: 11px;">رقم المعدة</th>
+              <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold; font-size: 11px;">الجهد ك.ف</th>
+              <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; color: #000; font-weight: bold; font-size: 10px;">حمل<br/>المعدة<br/>(MW)</th>
             </tr>
           </thead>
           <tbody>
-            ${filteredIncidents.map((inc, index) => `
-              <tr style="background-color: ${index % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; white-space: nowrap;">${inc.region}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; color: #1d4ed8; font-weight: bold; white-space: nowrap;">${inc.station}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; white-space: nowrap;">${inc.equipment}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; white-space: nowrap;">${inc.eqNumber}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; white-space: nowrap;">${inc.voltage} ك.ف</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; color: #dc2626; font-weight: bold; white-space: nowrap;">${inc.disconnectTime}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; color: #059669; font-weight: bold; white-space: nowrap;">${inc.connectTime || '-'}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; word-wrap: break-word;">${inc.reason}</td>
-                <td style="padding: 10px 8px; border: 1px solid #cbd5e1; color: #64748b; word-wrap: break-word;">${inc.notes || '-'}</td>
+            ${Object.keys(groupedIncidents).map(region => `
+              <tr>
+                <td colspan="9" style="padding: 6px; border: 2px solid black; background-color: #e2e8f0; font-weight: bold; font-size: 14px; text-align: center;">${region}</td>
               </tr>
+              ${groupedIncidents[region].map(inc => `
+                <tr>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.station}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.equipment}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.eqNumber}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.voltage}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;"></td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.disconnectTime}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-')}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.reason}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.notes || ''}</td>
+                </tr>
+              `).join('')}
             `).join('')}
             ${filteredIncidents.length === 0 ? `
               <tr>
-                <td colspan="9" style="text-align: center; padding: 20px; border: 1px solid #cbd5e1; color: #64748b;">لا توجد بيانات</td>
+                <td colspan="9" style="text-align: center; padding: 15px; border: 2px solid black; color: #64748b;">لا توجد بيانات</td>
               </tr>
             ` : ''}
           </tbody>
@@ -135,10 +149,10 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     `;
 
     const opt = {
-      margin:       0.3,
+      margin:       0.15,
       filename:     `${reportName || 'تقرير_الأعطال'}.pdf`,
-      image:        { type: 'jpeg', quality: 1 },
-      html2canvas:  { scale: 2, useCORS: true, logging: false },
+      image:        { type: 'jpeg', quality: 0.95 },
+      html2canvas:  { scale: 1.5, useCORS: true, logging: false },
       jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
     };
     
@@ -146,43 +160,73 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
   };
 
   const handleExportExcel = () => {
-    const headers = ['التاريخ', 'الإدارة', 'المحطة', 'المعدة', 'رقم المعدة', 'الجهد', 'الفصل', 'التوصيل', 'السبب', 'ملاحظات', 'الموظف', 'الحالة'];
-    const excelData = filteredIncidents.map(inc => [
-      inc.date, 
-      inc.region, 
-      inc.station, 
-      inc.equipment,
-      inc.eqNumber,
-      `${inc.voltage} ك.ف`,
-      inc.disconnectTime, 
-      inc.connectTime || '-', 
-      inc.reason, 
-      inc.notes || '-', 
-      inc.employeeName, 
-      inc.status
-    ]);
+    const excelData: any[][] = [];
     
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...excelData]);
+    // Title row
+    excelData.push(['التقرير اليومي لوضعية معدات شبكة الجهد المتوسط', '', '', '', '', '', '', '', '']);
     
+    // Headers Row 1
+    excelData.push(['المحطة', 'بيانات المعدة', '', '', '', 'ساعة الفصل', 'ساعة التوصيل', 'أسباب الخروج', 'الملاحظات والاجراءات']);
+    
+    // Headers Row 2
+    excelData.push(['', 'إسم المعدة', 'رقم المعدة', 'الجهد ك.ف', 'حمل المعدة (MW)', '', '', '', '']);
+    
+    // Data rows
+    Object.keys(groupedIncidents).forEach(region => {
+      excelData.push([region, '', '', '', '', '', '', '', '']);
+      groupedIncidents[region].forEach(inc => {
+        excelData.push([
+          inc.station,
+          inc.equipment,
+          inc.eqNumber,
+          inc.voltage,
+          '', // Load MW
+          inc.disconnectTime,
+          inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-'),
+          inc.reason,
+          inc.notes || ''
+        ]);
+      });
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+    worksheet['!dir'] = 'rtl';
+    
+    // Merges
+    worksheet['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } }, // Title
+      { s: { r: 1, c: 0 }, e: { r: 2, c: 0 } }, // Station
+      { s: { r: 1, c: 1 }, e: { r: 1, c: 4 } }, // Equipment Data
+      { s: { r: 1, c: 5 }, e: { r: 2, c: 5 } }, // Disconnect Time
+      { s: { r: 1, c: 6 }, e: { r: 2, c: 6 } }, // Connect Time
+      { s: { r: 1, c: 7 }, e: { r: 2, c: 7 } }, // Reason
+      { s: { r: 1, c: 8 }, e: { r: 2, c: 8 } }  // Notes
+    ];
+    
+    // Add region merges
+    let currentRow = 3;
+    Object.keys(groupedIncidents).forEach(region => {
+      worksheet['!merges']!.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 8 } });
+      currentRow += 1 + groupedIncidents[region].length;
+    });
+
+    // Column widths
     worksheet['!cols'] = [
-      { wch: 12 }, // التاريخ
-      { wch: 15 }, // الإدارة
-      { wch: 20 }, // المحطة
-      { wch: 15 }, // المعدة
-      { wch: 15 }, // رقم المعدة
-      { wch: 10 }, // الجهد
-      { wch: 10 }, // الفصل
-      { wch: 10 }, // التوصيل
-      { wch: 20 }, // السبب
-      { wch: 30 }, // ملاحظات
-      { wch: 15 }, // الموظف
-      { wch: 10 }  // الحالة
+      { wch: 20 }, // Station
+      { wch: 15 }, // Eq Name
+      { wch: 10 }, // Eq Number
+      { wch: 10 }, // Voltage
+      { wch: 15 }, // Load
+      { wch: 15 }, // Disconnect
+      { wch: 15 }, // Connect
+      { wch: 25 }, // Reason
+      { wch: 30 }  // Notes
     ];
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "التقرير اليومي");
     
-    XLSX.writeFile(workbook, `${reportName || 'تقرير_الأعطال'}.xlsx`);
+    XLSX.writeFile(workbook, `${reportName || 'التقرير_اليومي'}.xlsx`);
   };
 
   const handleWhatsApp = () => {
@@ -219,7 +263,7 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
   return (
     <div className="flex flex-col gap-6 relative print:block print:bg-white print:m-0 print:p-0">
       <style type="text/css" media="print">
-        {`@page { size: portrait; }`}
+        {`@page { size: portrait; margin: 10mm; }`}
       </style>
       {/* Cover Page (Print Only) */}
       <div className="hidden print:flex flex-col items-center justify-center h-[250mm] w-full bg-white text-center break-after-page pt-2 pb-4">
@@ -406,58 +450,70 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
         {reportName && <div className="hidden print:block text-center text-xl font-bold py-4 border-b mb-4">{reportName}</div>}
         
         <div className="overflow-x-auto print:overflow-visible print:block">
-          <table className="w-full text-right text-sm print:text-xs">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-700 print:bg-slate-100">
+          <table className="w-full text-center text-sm print:text-[11px] border-collapse border-2 border-black">
+            <thead className="bg-[#fcebeb] text-black">
               <tr>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">التاريخ</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">الإدارة</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">المحطة</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">المعدة</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">رقم المعدة</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">الجهد</th>
-                <th className="px-4 py-3 font-semibold text-red-600 print:border print:border-slate-300">الفصل</th>
-                <th className="px-4 py-3 font-semibold text-emerald-600 print:border print:border-slate-300">التوصيل</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">السبب</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300">ملاحظات</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300 print:hidden">الموظف</th>
-                <th className="px-4 py-3 font-semibold print:border print:border-slate-300 print:hidden">الحالة</th>
-                <th className="px-4 py-3 font-semibold text-center print:hidden">إجراءات</th>
+                <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">المحطة</th>
+                <th colSpan={4} className="px-1 py-1 border-2 border-black font-bold">بيانات المعدة</th>
+                <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">ساعة<br/>الفصل</th>
+                <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">ساعة<br/>التوصيل</th>
+                <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">أسباب الخروج</th>
+                <th rowSpan={2} className="px-1 py-1 border-2 border-black font-bold">الملاحظات<br/>والاجراءات</th>
+                <th rowSpan={2} className="px-2 py-2 border-2 border-black font-bold print:hidden">الموظف</th>
+                <th rowSpan={2} className="px-2 py-2 border-2 border-black font-bold print:hidden">الحالة</th>
+                <th rowSpan={2} className="px-2 py-2 border-2 border-black font-bold print:hidden">إجراءات</th>
+              </tr>
+              <tr>
+                <th className="px-1 py-1 border-2 border-black font-bold">إسم المعدة</th>
+                <th className="px-1 py-1 border-2 border-black font-bold text-[10px] print:text-[9px]">رقم المعدة</th>
+                <th className="px-1 py-1 border-2 border-black font-bold text-[10px] print:text-[9px]">الجهد ك.ف</th>
+                <th className="px-1 py-1 border-2 border-black font-bold text-[9px] print:text-[8px]">حمل<br/>المعدة<br/>(MW)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredIncidents.map((inc, index) => (
-                <tr key={inc.id} className={`hover:bg-slate-50 print:break-inside-avoid ${index % 2 === 0 ? 'print:bg-white' : 'print:bg-slate-50'}`}>
-                  <td className="px-4 py-3 print:border print:border-slate-300">{inc.date}</td>
-                  <td className="px-4 py-3 print:border print:border-slate-300">{inc.region}</td>
-                  <td className="px-4 py-3 font-medium text-blue-700 print:border print:border-slate-300">{inc.station}</td>
-                  <td className="px-4 py-3 print:border print:border-slate-300">{inc.equipment}</td>
-                  <td className="px-4 py-3 print:border print:border-slate-300">{inc.eqNumber}</td>
-                  <td className="px-4 py-3 text-slate-500 print:border print:border-slate-300">{inc.voltage} ك.ف</td>
-                  <td className="px-4 py-3 font-bold text-red-600 print:border print:border-slate-300">{inc.disconnectTime}</td>
-                  <td className="px-4 py-3 font-bold text-emerald-600 print:border print:border-slate-300">{inc.connectTime || '-'}</td>
-                  <td className="px-4 py-3 print:border print:border-slate-300">{inc.reason}</td>
-                  <td className="px-4 py-3 text-slate-500 print:border print:border-slate-300">{inc.notes || '-'}</td>
-                  <td className="px-4 py-3 text-slate-600 print:border print:border-slate-300 print:hidden">{inc.employeeName}</td>
-                  <td className="px-4 py-3 print:border print:border-slate-300 print:hidden">
-                    <span className={`font-medium ${inc.status === 'مُرجع' ? 'text-emerald-600' : 'text-red-600'}`}>
-                      {inc.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 print:hidden">
-                    <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => onEdit(inc)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => setDeleteConfirmationId(inc.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+              {Object.keys(groupedIncidents).map(region => (
+                <React.Fragment key={region}>
+                  <tr>
+                    <td colSpan={12} className="px-2 py-1 border-2 border-black bg-slate-200 font-bold text-sm print:text-xs text-center">
+                      {region}
+                    </td>
+                  </tr>
+                  {groupedIncidents[region].map((inc, index) => (
+                    <tr key={inc.id} className="hover:bg-slate-50 print:break-inside-avoid bg-white">
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.station}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.equipment}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.eqNumber}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.voltage}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold"></td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.disconnectTime}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-')}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.reason}</td>
+                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.notes || ''}</td>
+                      <td className="px-2 py-2 border-2 border-black text-slate-600 print:hidden">{inc.employeeName}</td>
+                      <td className="px-2 py-2 border-2 border-black print:hidden">
+                        <span className={`font-medium ${inc.status === 'مُرجع' ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {inc.status}
+                        </span>
+                      </td>
+                      <td className="px-2 py-2 border-2 border-black print:hidden">
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => onEdit(inc)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded">
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => setDeleteConfirmationId(inc.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
               ))}
               {filteredIncidents.length === 0 && (
                 <tr>
-                  <td colSpan={13} className="px-4 py-8 text-center text-slate-500 print:border print:border-slate-300">لا توجد بيانات</td>
+                  <td colSpan={12} className="px-4 py-8 text-center text-slate-500 border-2 border-black">
+                    لا توجد أحداث مطابقة للبحث
+                  </td>
                 </tr>
               )}
             </tbody>
