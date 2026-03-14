@@ -12,6 +12,7 @@ export default function Header({ activePage, toggleSidebar }: HeaderProps) {
     switch (activePage) {
       case 'dashboard': return 'نظرة عامة على الشبكة';
       case 'daily-report': return 'سجل التقرير اليومي';
+      case 'monthly-report': return 'سجل التقرير الشهري';
       case 'disconnected': return 'سجل الخطوط المفصولة حالياً';
       case 'add-event': return 'تسجيل انقطاع / عطل جديد';
       case 'manage-sources': return 'إدارة قواعد البيانات والمصادر';

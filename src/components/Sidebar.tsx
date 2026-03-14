@@ -12,6 +12,7 @@ export default function Sidebar({ activePage, setActivePage, isOpen }: SidebarPr
   const menuItems = [
     { id: 'dashboard', label: 'لوحة القيادة', icon: LayoutDashboard },
     { id: 'daily-report', label: 'التقرير اليومي', icon: FileText },
+    { id: 'monthly-report', label: 'التقرير الشهري', icon: FileText },
     { id: 'disconnected', label: 'الخطوط المفصولة', icon: AlertTriangle },
     { id: 'add-event', label: 'إضافة حدث', icon: PlusCircle },
     { id: 'manage-sources', label: 'إدارة المصادر', icon: Database },

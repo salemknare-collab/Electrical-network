@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
 import DailyReport from './pages/DailyReport';
+import MonthlyReport from './pages/MonthlyReport';
 import DisconnectedLines from './pages/DisconnectedLines';
 import AddEvent from './pages/AddEvent';
 import ManageSources from './pages/ManageSources';
@@ -13,7 +14,7 @@ import EditIncidentModal from './components/EditIncidentModal';
 import { db } from './firebase';
 import { collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from 'firebase/firestore';
 
-export type Page = 'dashboard' | 'daily-report' | 'disconnected' | 'add-event' | 'manage-sources' | 'backup';
+export type Page = 'dashboard' | 'daily-report' | 'monthly-report' | 'disconnected' | 'add-event' | 'manage-sources' | 'backup';
 
 export default function App() {
   const [activePage, setActivePage] = useState<Page>('dashboard');
@@ -131,6 +132,8 @@ export default function App() {
         return <Dashboard incidents={incidents} />;
       case 'daily-report':
         return <DailyReport incidents={incidents} sources={sources} onDelete={handleDeleteIncident} onEdit={handleEditIncident} />;
+      case 'monthly-report':
+        return <MonthlyReport incidents={incidents} sources={sources} onDelete={handleDeleteIncident} onEdit={handleEditIncident} />;
       case 'disconnected':
         return <DisconnectedLines incidents={incidents} sources={sources} onEdit={handleEditIncident} />;
       case 'add-event':
