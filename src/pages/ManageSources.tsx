@@ -16,6 +16,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
     pdfScale: sources.printSettings?.pdfScale ?? 1.5,
     pdfFontSize: sources.printSettings?.pdfFontSize ?? 11,
     printFontSize: sources.printSettings?.printFontSize ?? 11,
+    preparedBy: sources.printSettings?.preparedBy ?? '',
+    approvedBy: sources.printSettings?.approvedBy ?? '',
   });
 
   useEffect(() => {
@@ -24,10 +26,12 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
       pdfScale: sources.printSettings?.pdfScale ?? 1.5,
       pdfFontSize: sources.printSettings?.pdfFontSize ?? 11,
       printFontSize: sources.printSettings?.printFontSize ?? 11,
+      preparedBy: sources.printSettings?.preparedBy ?? '',
+      approvedBy: sources.printSettings?.approvedBy ?? '',
     });
   }, [sources.printSettings]);
 
-  const handleLocalSettingChange = (key: keyof typeof localPrintSettings, value: number) => {
+  const handleLocalSettingChange = (key: keyof typeof localPrintSettings, value: number | string) => {
     setLocalPrintSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -202,6 +206,28 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
               onChange={(e) => handleLocalSettingChange('printFontSize', parseInt(e.target.value))}
             />
             <span className="text-xs text-slate-500">القيمة الافتراضية: 11</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">اسم المُعِد (إعداد)</label>
+            <input 
+              type="text" 
+              className="border border-slate-300 rounded-lg p-2 text-right"
+              value={localPrintSettings.preparedBy}
+              onChange={(e) => handleLocalSettingChange('preparedBy', e.target.value)}
+              placeholder="مثال: م. أحمد محمد"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">اسم المُعتمد (اعتماد)</label>
+            <input 
+              type="text" 
+              className="border border-slate-300 rounded-lg p-2 text-right"
+              value={localPrintSettings.approvedBy}
+              onChange={(e) => handleLocalSettingChange('approvedBy', e.target.value)}
+              placeholder="مثال: م. خالد عبدالله"
+            />
           </div>
         </div>
 

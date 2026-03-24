@@ -90,6 +90,17 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             <p style="margin-bottom: 6px;">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
             <p style="margin-top: 12px;">طباعة / <span style="display: inline-block; min-width: 200px; border-bottom: 2px dashed black; text-align: center;">${reportName || ''}</span></p>
           </div>
+
+          <div style="display: flex; justify-content: space-between; width: 80%; margin-top: 60px;">
+            <div style="text-align: center;">
+              <h4 style="font-size: 20px; font-weight: bold; margin-bottom: 50px;">إعداد</h4>
+              <p style="font-size: 18px; border-top: 1px solid #000; padding-top: 10px; width: 200px; margin: 0 auto;">${sources.printSettings?.preparedBy || ''}</p>
+            </div>
+            <div style="text-align: center;">
+              <h4 style="font-size: 20px; font-weight: bold; margin-bottom: 50px;">اعتماد</h4>
+              <p style="font-size: 18px; border-top: 1px solid #000; padding-top: 10px; width: 200px; margin: 0 auto;">${sources.printSettings?.approvedBy || ''}</p>
+            </div>
+          </div>
         </div>
 
         <!-- Report Header -->
@@ -150,11 +161,11 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
         
         <div style="display: flex; justify-content: space-between; margin-top: 40px; font-weight: bold; text-align: center; font-size: 16px;">
           <div style="width: 40%;">
-            <p style="margin-bottom: 30px;">مدير دائرة متابعة التشغيل</p>
+            <p style="margin-bottom: 30px;">${sources.printSettings?.preparedBy || 'رئيس قسم المعلومات والتقارير'}</p>
             <p>........................................</p>
           </div>
           <div style="width: 40%;">
-            <p style="margin-bottom: 30px;">رئيس قسم المعلومات والتقارير</p>
+            <p style="margin-bottom: 30px;">${sources.printSettings?.approvedBy || 'مدير دائرة متابعة التشغيل'}</p>
             <p>........................................</p>
           </div>
         </div>
@@ -402,6 +413,17 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             <p className="mb-1">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
             <p className="mt-4">طباعة / <span className="inline-block min-w-[200px] border-b-2 border-dashed border-black text-center">{reportName || ''}</span></p>
           </div>
+
+          <div className="flex justify-between w-4/5 mt-16 mx-auto">
+            <div className="text-center">
+              <h4 className="text-xl font-bold mb-16">إعداد</h4>
+              <p className="text-lg border-t border-black pt-2 w-48 mx-auto">{sources.printSettings?.preparedBy || ''}</p>
+            </div>
+            <div className="text-center">
+              <h4 className="text-xl font-bold mb-16">اعتماد</h4>
+              <p className="text-lg border-t border-black pt-2 w-48 mx-auto">{sources.printSettings?.approvedBy || ''}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -624,11 +646,11 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
         
         <div className="hidden print:flex justify-between mt-12 text-center font-bold text-lg px-8">
           <div className="w-2/5">
-            <p className="mb-8">مدير دائرة متابعة التشغيل</p>
+            <p className="mb-8">${sources.printSettings?.preparedBy || 'رئيس قسم المعلومات والتقارير'}</p>
             <p>........................................</p>
           </div>
           <div className="w-2/5">
-            <p className="mb-8">رئيس قسم المعلومات والتقارير</p>
+            <p className="mb-8">${sources.printSettings?.approvedBy || 'مدير دائرة متابعة التشغيل'}</p>
             <p>........................................</p>
           </div>
         </div>

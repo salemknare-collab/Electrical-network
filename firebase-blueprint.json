@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "Incident": {
+      "title": "Incident",
+      "description": "Represents a single incident or event in the electrical network.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the incident."
+        },
+        "region": {
+          "type": "string",
+          "description": "The region where the incident occurred."
+        },
+        "station": {
+          "type": "string",
+          "description": "The station where the incident occurred."
+        },
+        "equipment": {
+          "type": "string",
+          "description": "The equipment involved in the incident."
+        },
+        "eqNumber": {
+          "type": "string",
+          "description": "The equipment number."
+        },
+        "voltage": {
+          "type": "string",
+          "description": "The voltage level."
+        },
+        "disconnectTime": {
+          "type": "string",
+          "description": "The time the equipment was disconnected."
+        },
+        "connectTime": {
+          "type": "string",
+          "description": "The time the equipment was connected."
+        },
+        "reason": {
+          "type": "string",
+          "description": "The reason for the incident."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the incident."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the incident (e.g., 'مُرجع', 'مفصول')."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "The date of the incident."
+        },
+        "employeeName": {
+          "type": "string",
+          "description": "The name of the employee who recorded the incident."
+        }
+      },
+      "required": [
+        "id",
+        "region",
+        "station",
+        "equipment",
+        "eqNumber",
+        "voltage",
+        "disconnectTime",
+        "connectTime",
+        "reason",
+        "notes",
+        "status",
+        "date",
+        "employeeName"
+      ]
+    },
+    "Sources": {
+      "title": "Sources",
+      "description": "Settings and lookup data for the application.",
+      "type": "object",
+      "properties": {
+        "regions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of regions."
+        },
+        "stations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of stations."
+        },
+        "equipments": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of equipments."
+        },
+        "voltages": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of voltages."
+        },
+        "reasons": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of reasons."
+        },
+        "employees": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of employees."
+        },
+        "printSettings": {
+          "type": "object",
+          "properties": {
+            "headerImage": { "type": "string", "description": "Base64 encoded header image." },
+            "coverImage": { "type": "string", "description": "Base64 encoded cover image." },
+            "pdfMargin": { "type": "number", "description": "Margin for PDF export." },
+            "pdfScale": { "type": "number", "description": "Scale for PDF export." },
+            "pdfFontSize": { "type": "number", "description": "Font size for PDF export." },
+            "printFontSize": { "type": "number", "description": "Font size for printing." }
+          },
+          "description": "Settings for printing and exporting."
+        }
+      },
+      "required": [
+        "regions",
+        "stations",
+        "equipments",
+        "voltages",
+        "reasons",
+        "employees"
+      ]
+    }
+  },
+  "firestore": {
+    "incidents/{incidentId}": {
+      "schema": { "$ref": "#/entities/Incident" },
+      "description": "Collection of all incidents."
+    },
+    "settings/sources": {
+      "schema": { "$ref": "#/entities/Sources" },
+      "description": "Global settings and lookup data."
+    }
+  }
+}

@@ -28,5 +28,7 @@ export interface Sources {
     pdfScale?: number;
     pdfFontSize?: number;
     printFontSize?: number;
+    preparedBy?: string;
+    approvedBy?: string;
   };
 }
