@@ -40,11 +40,14 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     );
   });
 
-  const groupedIncidents = filteredIncidents.reduce((acc, inc) => {
-    if (!acc[inc.region]) acc[inc.region] = [];
-    acc[inc.region].push(inc);
+  const regionsToShow = filters.region ? [filters.region] : sources.regions;
+
+  const groupedIncidents = regionsToShow.reduce((acc, region) => {
+    acc[region] = filteredIncidents.filter(inc => inc.region === region);
     return acc;
   }, {} as Record<string, Incident[]>);
+
+  const disconnectedIncidents = filteredIncidents.filter(inc => inc.status === 'مفصول');
 
   const handlePrint = () => {
     window.print();
@@ -85,7 +88,7 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             <p style="margin-bottom: 6px;">صورة الى /</p>
             <p style="margin-bottom: 6px;">السيد/مساعد مدير عام الادارة العامة لشبكات الجهد المتوسط</p>
             <p style="margin-bottom: 6px;">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
-            <p style="margin-top: 12px;">طباعة / <span style="display: inline-block; min-width: 200px; border-bottom: 2px dashed black; text-align: center;">${reportName || ''}</span> / <span style="display: inline-block; min-width: 150px; border-bottom: 2px dashed black; text-align: center;">${formatDate(new Date().toISOString())}</span></p>
+            <p style="margin-top: 12px;">طباعة / <span style="display: inline-block; min-width: 200px; border-bottom: 2px dashed black; text-align: center;">${reportName || ''}</span></p>
           </div>
         </div>
 
@@ -120,11 +123,11 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             </tr>
           </thead>
           <tbody>
-            ${Object.keys(groupedIncidents).map(region => `
+            ${regionsToShow.map(region => `
               <tr>
                 <td colspan="9" style="padding: 6px; border: 2px solid black; background-color: #e2e8f0; font-weight: bold; font-size: 14px; text-align: center;">${region}</td>
               </tr>
-              ${groupedIncidents[region].map(inc => `
+              ${groupedIncidents[region].length > 0 ? groupedIncidents[region].map(inc => `
                 <tr>
                   <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.station}</td>
                   <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.equipment}</td>
@@ -136,15 +139,58 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
                   <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.reason}</td>
                   <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.notes || ''}</td>
                 </tr>
-              `).join('')}
+              `).join('') : `
+                <tr>
+                  <td colspan="9" style="padding: 6px 4px; border: 2px solid black; font-weight: bold; text-align: center; color: #64748b;">لا يوجد احداث</td>
+                </tr>
+              `}
             `).join('')}
-            ${filteredIncidents.length === 0 ? `
-              <tr>
-                <td colspan="9" style="text-align: center; padding: 15px; border: 2px solid black; color: #64748b;">لا توجد بيانات</td>
-              </tr>
-            ` : ''}
           </tbody>
         </table>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 40px; font-weight: bold; text-align: center; font-size: 16px;">
+          <div style="width: 40%;">
+            <p style="margin-bottom: 30px;">مدير دائرة متابعة التشغيل</p>
+            <p>........................................</p>
+          </div>
+          <div style="width: 40%;">
+            <p style="margin-bottom: 30px;">رئيس قسم المعلومات والتقارير</p>
+            <p>........................................</p>
+          </div>
+        </div>
+        
+        <!-- Disconnected Lines Page -->
+        <div style="page-break-before: always; padding-top: 20px;">
+          <h2 style="text-align: center; margin-bottom: 15px; color: #dc2626; font-size: 20px; font-weight: bold;">المعدات المفصولة</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: ${sources.printSettings?.pdfFontSize ?? 11}px; text-align: center; border: 2px solid black; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" dir="rtl">
+            <thead>
+              <tr>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">التاريخ</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">الإدارة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">المحطة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">المعدة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">وقت الفصل</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">السبب والملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${disconnectedIncidents.length > 0 ? disconnectedIncidents.map(inc => `
+                <tr>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.date}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.region}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.station}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold; color: #dc2626;">${inc.disconnectTime}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.reason}<br/><span style="font-size: 10px; color: #64748b;">${inc.notes || ''}</span></td>
+                </tr>
+              `).join('') : `
+                <tr>
+                  <td colspan="6" style="padding: 15px; border: 2px solid black; font-weight: bold; text-align: center; color: #10b981;">الحمد لله، لا توجد أي خطوط مفصولة</td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
 
@@ -172,21 +218,25 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     excelData.push(['', 'إسم المعدة', 'رقم المعدة', 'الجهد ك.ف', 'حمل المعدة (MW)', '', '', '', '']);
     
     // Data rows
-    Object.keys(groupedIncidents).forEach(region => {
+    regionsToShow.forEach(region => {
       excelData.push([region, '', '', '', '', '', '', '', '']);
-      groupedIncidents[region].forEach(inc => {
-        excelData.push([
-          inc.station,
-          inc.equipment,
-          inc.eqNumber,
-          inc.voltage,
-          '', // Load MW
-          inc.disconnectTime,
-          inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-'),
-          inc.reason,
-          inc.notes || ''
-        ]);
-      });
+      if (groupedIncidents[region].length > 0) {
+        groupedIncidents[region].forEach(inc => {
+          excelData.push([
+            inc.station,
+            inc.equipment,
+            inc.eqNumber,
+            inc.voltage,
+            '', // Load MW
+            inc.disconnectTime,
+            inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-'),
+            inc.reason,
+            inc.notes || ''
+          ]);
+        });
+      } else {
+        excelData.push(['لا يوجد احداث', '', '', '', '', '', '', '', '']);
+      }
     });
 
     const worksheet = XLSX.utils.aoa_to_sheet(excelData);
@@ -205,10 +255,42 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
     
     // Add region merges
     let currentRow = 3;
-    Object.keys(groupedIncidents).forEach(region => {
+    regionsToShow.forEach(region => {
       worksheet['!merges']!.push({ s: { r: currentRow, c: 0 }, e: { r: currentRow, c: 8 } });
-      currentRow += 1 + groupedIncidents[region].length;
+      currentRow += 1 + (groupedIncidents[region].length > 0 ? groupedIncidents[region].length : 1);
     });
+    
+    // Append Disconnected Lines to Excel
+    excelData.push(['', '', '', '', '', '', '', '', '']);
+    excelData.push(['', '', '', '', '', '', '', '', '']);
+    
+    const discTitleRowIndex = excelData.length;
+    excelData.push(['المعدات المفصولة', '', '', '', '', '', '', '', '']);
+    excelData.push(['التاريخ', 'الإدارة', 'المحطة', 'المعدة', 'وقت الفصل', 'السبب والملاحظات', '', '', '']);
+    
+    if (disconnectedIncidents.length > 0) {
+      disconnectedIncidents.forEach(inc => {
+        excelData.push([
+          inc.date,
+          inc.region,
+          inc.station,
+          `${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)`,
+          inc.disconnectTime,
+          `${inc.reason} - ${inc.notes || ''}`,
+          '', '', ''
+        ]);
+      });
+    } else {
+      excelData.push(['لا توجد خطوط مفصولة', '', '', '', '', '', '', '', '']);
+    }
+
+    // Update worksheet with new data
+    XLSX.utils.sheet_add_aoa(worksheet, excelData.slice(currentRow), { origin: currentRow });
+    
+    worksheet['!merges']!.push({ s: { r: discTitleRowIndex, c: 0 }, e: { r: discTitleRowIndex, c: 8 } });
+    if (disconnectedIncidents.length === 0) {
+      worksheet['!merges']!.push({ s: { r: discTitleRowIndex + 2, c: 0 }, e: { r: discTitleRowIndex + 2, c: 8 } });
+    }
 
     // Column widths
     worksheet['!cols'] = [
@@ -230,13 +312,21 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
   };
 
   const handleWhatsApp = () => {
-    const text = `*${reportName || 'تقرير الأعطال'} - ${new Date().toLocaleDateString('ar-LY')}*\n\n` + 
-      filteredIncidents.map(inc => 
-        `📍 *${inc.station}* (${inc.region})\n` +
-        `⚡ ${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)\n` +
-        `🕒 فصل: ${inc.disconnectTime} | حالة: ${inc.status}\n` +
-        `-------------------`
-      ).join('\n');
+    let text = `*${reportName || 'تقرير الأعطال'} - ${new Date().toLocaleDateString('ar-LY')}*\n\n`;
+    
+    regionsToShow.forEach(region => {
+      text += `🏢 *${region}*\n`;
+      if (groupedIncidents[region].length > 0) {
+        groupedIncidents[region].forEach(inc => {
+          text += `📍 *${inc.station}*\n` +
+                  `⚡ ${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)\n` +
+                  `🕒 فصل: ${inc.disconnectTime} | حالة: ${inc.status}\n` +
+                  `-------------------\n`;
+        });
+      } else {
+        text += `لا يوجد احداث\n-------------------\n`;
+      }
+    });
     
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
@@ -310,7 +400,7 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
             <p className="mb-1">صورة الى /</p>
             <p className="mb-1">السيد/مساعد مدير عام الادارة العامة لشبكات الجهد المتوسط</p>
             <p className="mb-1">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
-            <p className="mt-4">طباعة / <span className="inline-block min-w-[200px] border-b-2 border-dashed border-black text-center">{reportName || ''}</span> / <span className="inline-block min-w-[150px] border-b-2 border-dashed border-black text-center">{formatDate(new Date().toISOString())}</span></p>
+            <p className="mt-4">طباعة / <span className="inline-block min-w-[200px] border-b-2 border-dashed border-black text-center">{reportName || ''}</span></p>
           </div>
         </div>
       </div>
@@ -475,48 +565,105 @@ export default function DailyReport({ incidents, sources, onDelete, onEdit }: Da
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {Object.keys(groupedIncidents).map(region => (
+              {regionsToShow.map(region => (
                 <React.Fragment key={region}>
                   <tr>
                     <td colSpan={12} className="px-2 py-1 border-2 border-black bg-slate-200 font-bold text-sm print:text-xs text-center">
                       {region}
                     </td>
                   </tr>
-                  {groupedIncidents[region].map((inc, index) => (
-                    <tr key={inc.id} className="hover:bg-slate-50 print:break-inside-avoid bg-white">
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.station}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.equipment}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.eqNumber}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.voltage}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold"></td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.disconnectTime}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-')}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.reason}</td>
-                      <td className="px-1 py-1 border-2 border-black font-bold">{inc.notes || ''}</td>
-                      <td className="px-2 py-2 border-2 border-black text-slate-600 print:hidden">{inc.employeeName}</td>
-                      <td className="px-2 py-2 border-2 border-black print:hidden">
-                        <span className={`font-medium ${inc.status === 'مُرجع' ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {inc.status}
-                        </span>
-                      </td>
-                      <td className="px-2 py-2 border-2 border-black print:hidden">
-                        <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => onEdit(inc)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => setDeleteConfirmationId(inc.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                  {groupedIncidents[region].length > 0 ? (
+                    groupedIncidents[region].map((inc, index) => (
+                      <tr key={inc.id} className="hover:bg-slate-50 print:break-inside-avoid bg-white">
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.station}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.equipment}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.eqNumber}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.voltage}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold"></td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.disconnectTime}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.status === 'مفصول' ? 'باقي مفصول' : (inc.connectTime || '-')}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.reason}</td>
+                        <td className="px-1 py-1 border-2 border-black font-bold">{inc.notes || ''}</td>
+                        <td className="px-2 py-2 border-2 border-black text-slate-600 print:hidden">{inc.employeeName}</td>
+                        <td className="px-2 py-2 border-2 border-black print:hidden">
+                          <span className={`font-medium ${inc.status === 'مُرجع' ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {inc.status}
+                          </span>
+                        </td>
+                        <td className="px-2 py-2 border-2 border-black print:hidden">
+                          <div className="flex items-center justify-center gap-2">
+                            <button onClick={() => onEdit(inc)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => setDeleteConfirmationId(inc.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={12} className="px-1 py-2 border-2 border-black text-center font-bold text-slate-500">
+                        لا يوجد احداث
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </React.Fragment>
               ))}
               {filteredIncidents.length === 0 && (
                 <tr>
                   <td colSpan={12} className="px-4 py-8 text-center text-slate-500 border-2 border-black">
                     لا توجد أحداث مطابقة للبحث
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="hidden print:flex justify-between mt-12 text-center font-bold text-lg px-8">
+          <div className="w-2/5">
+            <p className="mb-8">مدير دائرة متابعة التشغيل</p>
+            <p>........................................</p>
+          </div>
+          <div className="w-2/5">
+            <p className="mb-8">رئيس قسم المعلومات والتقارير</p>
+            <p>........................................</p>
+          </div>
+        </div>
+
+        {/* Disconnected Lines Print Page */}
+        <div className="hidden print:block break-before-page pt-8">
+          <h2 className="text-center mb-6 text-red-600 text-xl font-bold">المعدات المفصولة</h2>
+          <table className="w-full text-center text-sm border-collapse border-2 border-black" style={{ fontSize: `var(--print-font-size, 11px)` }}>
+            <thead className="bg-[#fcebeb] text-black">
+              <tr>
+                <th className="px-2 py-2 border-2 border-black font-bold">التاريخ</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">الإدارة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">المحطة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">المعدة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">وقت الفصل</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">السبب والملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {disconnectedIncidents.length > 0 ? disconnectedIncidents.map(inc => (
+                <tr key={`disc-${inc.id}`} className="bg-white print:break-inside-avoid">
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.date}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.region}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.station}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.equipment} {inc.eqNumber} ({inc.voltage} ك.ف)</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold text-red-600">{inc.disconnectTime}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">
+                    <div>{inc.reason}</div>
+                    <div className="text-[10px] text-slate-600">{inc.notes}</div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-emerald-600 font-bold border-2 border-black">
+                    الحمد لله، لا توجد أي خطوط مفصولة
                   </td>
                 </tr>
               )}

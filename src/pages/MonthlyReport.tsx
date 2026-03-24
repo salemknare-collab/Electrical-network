@@ -43,6 +43,8 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
   // Sort by date descending
   const sortedIncidents = [...filteredIncidents].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  const disconnectedIncidents = sortedIncidents.filter(inc => inc.status === 'مفصول');
+
   const handlePrint = () => {
     window.print();
   };
@@ -82,7 +84,7 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
             <p style="margin-bottom: 6px;">صورة الى /</p>
             <p style="margin-bottom: 6px;">السيد/مساعد مدير عام الادارة العامة لشبكات الجهد المتوسط</p>
             <p style="margin-bottom: 6px;">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
-            <p style="margin-top: 12px;">طباعة / <span style="display: inline-block; min-width: 200px; border-bottom: 2px dashed black; text-align: center;">${reportName || ''}</span> / <span style="display: inline-block; min-width: 150px; border-bottom: 2px dashed black; text-align: center;">${formatDate(new Date().toISOString())}</span></p>
+            <p style="margin-top: 12px;">طباعة / <span style="display: inline-block; min-width: 200px; border-bottom: 2px dashed black; text-align: center;">${reportName || ''}</span></p>
           </div>
         </div>
 
@@ -140,6 +142,50 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
             ` : ''}
           </tbody>
         </table>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 40px; font-weight: bold; text-align: center; font-size: 16px;">
+          <div style="width: 40%;">
+            <p style="margin-bottom: 30px;">مدير دائرة متابعة التشغيل</p>
+            <p>........................................</p>
+          </div>
+          <div style="width: 40%;">
+            <p style="margin-bottom: 30px;">رئيس قسم المعلومات والتقارير</p>
+            <p>........................................</p>
+          </div>
+        </div>
+        
+        <!-- Disconnected Lines Page -->
+        <div style="page-break-before: always; padding-top: 20px;">
+          <h2 style="text-align: center; margin-bottom: 15px; color: #dc2626; font-size: 20px; font-weight: bold;">المعدات المفصولة</h2>
+          <table style="width: 100%; border-collapse: collapse; font-size: ${sources.printSettings?.pdfFontSize ?? 11}px; text-align: center; border: 2px solid black; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;" dir="rtl">
+            <thead>
+              <tr>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">التاريخ</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">الإدارة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">المحطة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">المعدة</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">وقت الفصل</th>
+                <th style="padding: 6px 4px; border: 2px solid black; background-color: #fcebeb; font-weight: bold;">السبب والملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${disconnectedIncidents.length > 0 ? disconnectedIncidents.map(inc => `
+                <tr>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.date}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.region}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.station}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold; color: #dc2626;">${inc.disconnectTime}</td>
+                  <td style="padding: 6px 4px; border: 2px solid black; font-weight: bold;">${inc.reason}<br/><span style="font-size: 10px; color: #64748b;">${inc.notes || ''}</span></td>
+                </tr>
+              `).join('') : `
+                <tr>
+                  <td colspan="6" style="padding: 15px; border: 2px solid black; font-weight: bold; text-align: center; color: #10b981;">الحمد لله، لا توجد أي خطوط مفصولة</td>
+                </tr>
+              `}
+            </tbody>
+          </table>
+        </div>
       </div>
     `;
 
@@ -181,6 +227,31 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
       ]);
     });
 
+    // Append Disconnected Lines to Excel
+    const currentRow = excelData.length;
+    excelData.push(['', '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['', '', '', '', '', '', '', '', '', '', '', '']);
+    
+    const discTitleRowIndex = excelData.length;
+    excelData.push(['المعدات المفصولة', '', '', '', '', '', '', '', '', '', '', '']);
+    excelData.push(['التاريخ', 'الإدارة', 'المحطة', 'المعدة', 'وقت الفصل', 'السبب والملاحظات', '', '', '', '', '', '']);
+    
+    if (disconnectedIncidents.length > 0) {
+      disconnectedIncidents.forEach(inc => {
+        excelData.push([
+          inc.date,
+          inc.region,
+          inc.station,
+          `${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)`,
+          inc.disconnectTime,
+          `${inc.reason} - ${inc.notes || ''}`,
+          '', '', '', '', '', ''
+        ]);
+      });
+    } else {
+      excelData.push(['لا توجد خطوط مفصولة', '', '', '', '', '', '', '', '', '', '', '']);
+    }
+
     const worksheet = XLSX.utils.aoa_to_sheet(excelData);
     worksheet['!dir'] = 'rtl';
     
@@ -188,6 +259,11 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
     worksheet['!merges'] = [
       { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }, // Title
     ];
+    
+    worksheet['!merges'].push({ s: { r: discTitleRowIndex, c: 0 }, e: { r: discTitleRowIndex, c: 11 } });
+    if (disconnectedIncidents.length === 0) {
+      worksheet['!merges'].push({ s: { r: discTitleRowIndex + 2, c: 0 }, e: { r: discTitleRowIndex + 2, c: 11 } });
+    }
 
     // Column widths
     worksheet['!cols'] = [
@@ -294,7 +370,7 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
             <p className="mb-1">صورة الى /</p>
             <p className="mb-1">السيد/مساعد مدير عام الادارة العامة لشبكات الجهد المتوسط</p>
             <p className="mb-1">للملــــــــــــــــــــــــــــــــــــــــــــــــــــــــف</p>
-            <p className="mt-4">طباعة / <span className="inline-block min-w-[200px] border-b-2 border-dashed border-black text-center">{reportName || ''}</span> / <span className="inline-block min-w-[150px] border-b-2 border-dashed border-black text-center">{formatDate(new Date().toISOString())}</span></p>
+            <p className="mt-4">طباعة / <span className="inline-block min-w-[200px] border-b-2 border-dashed border-black text-center">{reportName || ''}</span></p>
           </div>
         </div>
       </div>
@@ -491,6 +567,55 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
                 <tr>
                   <td colSpan={13} className="px-4 py-8 text-center text-slate-500 border-2 border-slate-300">
                     لا توجد أحداث مطابقة للبحث
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        <div className="hidden print:flex justify-between mt-12 text-center font-bold text-lg px-8">
+          <div className="w-2/5">
+            <p className="mb-8">مدير دائرة متابعة التشغيل</p>
+            <p>........................................</p>
+          </div>
+          <div className="w-2/5">
+            <p className="mb-8">رئيس قسم المعلومات والتقارير</p>
+            <p>........................................</p>
+          </div>
+        </div>
+
+        {/* Disconnected Lines Print Page */}
+        <div className="hidden print:block break-before-page pt-8">
+          <h2 className="text-center mb-6 text-red-600 text-xl font-bold">المعدات المفصولة</h2>
+          <table className="w-full text-center text-sm border-collapse border-2 border-black" style={{ fontSize: `var(--print-font-size, 11px)` }}>
+            <thead className="bg-[#fcebeb] text-black">
+              <tr>
+                <th className="px-2 py-2 border-2 border-black font-bold">التاريخ</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">الإدارة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">المحطة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">المعدة</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">وقت الفصل</th>
+                <th className="px-2 py-2 border-2 border-black font-bold">السبب والملاحظات</th>
+              </tr>
+            </thead>
+            <tbody>
+              {disconnectedIncidents.length > 0 ? disconnectedIncidents.map(inc => (
+                <tr key={`disc-${inc.id}`} className="bg-white print:break-inside-avoid">
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.date}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.region}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.station}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">{inc.equipment} {inc.eqNumber} ({inc.voltage} ك.ف)</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold text-red-600">{inc.disconnectTime}</td>
+                  <td className="px-1 py-1 border-2 border-black font-bold">
+                    <div>{inc.reason}</div>
+                    <div className="text-[10px] text-slate-600">{inc.notes}</div>
+                  </td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-emerald-600 font-bold border-2 border-black">
+                    الحمد لله، لا توجد أي خطوط مفصولة
                   </td>
                 </tr>
               )}
