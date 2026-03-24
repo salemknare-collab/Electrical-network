@@ -27,24 +27,36 @@ export default function App() {
 
   // Sync with Firebase Firestore
   useEffect(() => {
-    const unsubscribeIncidents = onSnapshot(collection(db, 'incidents'), (snapshot) => {
-      const incidentsData = snapshot.docs.map(doc => doc.data() as Incident);
-      // Sort by date descending
-      incidentsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-      setIncidents(incidentsData);
-    });
+    const handleError = (error: Error) => {
+      console.error("Firebase connection error: ", error);
+      setLoading(false);
+    };
 
-    const unsubscribeSources = onSnapshot(doc(db, 'settings', 'sources'), (docSnap) => {
-      if (docSnap.exists()) {
-        setSources(docSnap.data() as Sources);
-      } else {
-        // Initialize if not exists
-        setDoc(doc(db, 'settings', 'sources'), initialSources);
-        setSources(initialSources);
-      }
-    });
+    const unsubscribeIncidents = onSnapshot(
+      collection(db, 'incidents'),
+      (snapshot) => {
+        const incidentsData = snapshot.docs.map(doc => doc.data() as Incident);
+        // Sort by date descending
+        incidentsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setIncidents(incidentsData);
+        setLoading(false);
+      },
+      handleError
+    );
 
-    setLoading(false);
+    const unsubscribeSources = onSnapshot(
+      doc(db, 'settings', 'sources'),
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setSources(docSnap.data() as Sources);
+        } else {
+          // Initialize if not exists
+          setDoc(doc(db, 'settings', 'sources'), initialSources);
+          setSources(initialSources);
+        }
+      },
+      handleError
+    );
 
     return () => {
       unsubscribeIncidents();
