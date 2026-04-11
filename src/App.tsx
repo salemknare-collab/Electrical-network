@@ -36,7 +36,12 @@ export default function App() {
 
     const unsubscribeSources = onSnapshot(doc(db, 'settings', 'sources'), (docSnap) => {
       if (docSnap.exists()) {
-        setSources(docSnap.data() as Sources);
+        const data = docSnap.data() as Sources;
+        if (!data.timeFormat) {
+          data.timeFormat = '24h';
+          setDoc(doc(db, 'settings', 'sources'), data);
+        }
+        setSources(data);
       } else {
         // Initialize if not exists
         setDoc(doc(db, 'settings', 'sources'), initialSources);

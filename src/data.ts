@@ -69,5 +69,6 @@ export const sources: Sources = {
     "علي صبحي الفطيسي",
     "سالم فرحات",
     "هيثم الغناي"
-  ]
+  ],
+  timeFormat: '24h'
 };

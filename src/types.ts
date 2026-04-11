@@ -21,6 +21,7 @@ export interface Sources {
   voltages: string[];
   reasons: string[];
   employees: string[];
+  timeFormat?: '12h' | '24h';
   printSettings?: {
     headerImage?: string | null;
     coverImage?: string | null;

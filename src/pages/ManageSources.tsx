@@ -11,6 +11,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
   const headerInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
+  const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>(sources.timeFormat || '24h');
+
   const [localPrintSettings, setLocalPrintSettings] = useState({
     pdfMargin: sources.printSettings?.pdfMargin ?? 0.15,
     pdfScale: sources.printSettings?.pdfScale ?? 1.5,
@@ -29,7 +31,8 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
       preparedBy: sources.printSettings?.preparedBy ?? '',
       approvedBy: sources.printSettings?.approvedBy ?? '',
     });
-  }, [sources.printSettings]);
+    setTimeFormat(sources.timeFormat || '24h');
+  }, [sources.printSettings, sources.timeFormat]);
 
   const handleLocalSettingChange = (key: keyof typeof localPrintSettings, value: number | string) => {
     setLocalPrintSettings(prev => ({ ...prev, [key]: value }));
@@ -38,6 +41,7 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
   const savePrintSettings = () => {
     setSources({
       ...sources,
+      timeFormat,
       printSettings: {
         ...sources.printSettings,
         ...localPrintSettings
@@ -150,7 +154,7 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
         <div className="p-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Settings className="w-5 h-5 text-slate-500" />
-            <h3 className="font-bold text-slate-800">إعدادات الطباعة والتصدير</h3>
+            <h3 className="font-bold text-slate-800">إعدادات النظام والطباعة</h3>
           </div>
           <button 
             onClick={savePrintSettings}
@@ -162,6 +166,18 @@ export default function ManageSources({ sources, setSources }: ManageSourcesProp
         </div>
         
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 border-b border-slate-100">
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-slate-700">نظام الوقت</label>
+            <select 
+              className="border border-slate-300 rounded-lg p-2 text-right"
+              value={timeFormat}
+              onChange={(e) => setTimeFormat(e.target.value as '12h' | '24h')}
+            >
+              <option value="24h">نظام 24 ساعة</option>
+              <option value="12h">نظام 12 ساعة (ص/م)</option>
+            </select>
+          </div>
+
           <div className="flex flex-col gap-2">
             <label className="text-sm font-bold text-slate-700">هوامش ملف الـ PDF</label>
             <input 

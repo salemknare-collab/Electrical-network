@@ -110,6 +110,11 @@
           "items": { "type": "string" },
           "description": "List of employees."
         },
+        "timeFormat": {
+          "type": "string",
+          "enum": ["12h", "24h"],
+          "description": "The preferred time format for the application."
+        },
         "printSettings": {
           "type": "object",
           "properties": {
