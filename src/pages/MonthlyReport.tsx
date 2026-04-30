@@ -49,11 +49,30 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    const htmlContent = `
+  const generateHTMLReport = (forExcel: boolean = false) => {
+    let html = '';
+    
+    if (forExcel) {
+      html += `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="utf-8">
+          <title>${reportName || 'التقرير الشهري للأعطال'}</title>
+          <style>
+            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; }
+            table { border-collapse: collapse; text-align: center; font-size: ${sources.printSettings?.printFontSize ?? 12}px; border: 2px solid black; }
+            th, td { padding: 6px 4px; border: 2px solid black; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+      `;
+    }
+
+    html += `
       <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; padding: 10px; background-color: white; width: 100%;">
         
         <!-- Cover Page -->
+        ${!forExcel ? `
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 1050px; text-align: center; page-break-after: always; padding-top: 10px; box-sizing: border-box;">
           <h1 style="font-size: 38px; font-weight: bold; color: #1e40af; margin-bottom: 15px;">الشركة العامة للكهرباء</h1>
           <h2 style="font-size: 28px; font-weight: bold; color: #dc2626; margin-bottom: 15px;">الإدارة العامة لشبكات الجهد المتوسط</h2>
@@ -98,17 +117,18 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
             </div>
           </div>
         </div>
+        ` : ''}
 
         <!-- Report Header -->
-        ${sources.printSettings?.headerImage ? `
+        ${sources.printSettings?.headerImage && !forExcel ? `
           <div style="text-align: center; margin-bottom: 20px;">
             <img src="${sources.printSettings.headerImage}" alt="Header" style="max-height: 100px; object-fit: contain;" />
           </div>
         ` : `
-          <div style="display: flex; flex-direction: column; align-items: center; background-color: #0f172a; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="display: flex; flex-direction: column; align-items: center; background-color: ${forExcel ? '#ffffff' : '#0f172a'}; color: ${forExcel ? '#000000' : 'white'}; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <div style="color: #facc15; font-size: 40px; margin-bottom: 10px;">⚡</div>
             <h1 style="font-size: 24px; font-weight: bold; margin: 0 0 5px 0;">الشركة العامة للكهرباء</h1>
-            <h2 style="font-size: 18px; color: #cbd5e1; margin: 0;">إدارة تخطيط التشغيل</h2>
+            <h2 style="font-size: 18px; color: ${forExcel ? '#475569' : '#cbd5e1'}; margin: 0;">إدارة تخطيط التشغيل</h2>
           </div>
         `}
         <h2 style="text-align: center; margin-bottom: 15px; color: #000; font-size: 20px; font-weight: bold;">التقرير الشهري للأعطال</h2>
@@ -200,6 +220,19 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
       </div>
     `;
 
+    if (forExcel) {
+      html += `
+        </body>
+        </html>
+      `;
+    }
+
+    return html;
+  };
+
+  const handleDownloadPDF = () => {
+    const htmlContent = generateHTMLReport(false);
+
     const opt = {
       margin:       sources.printSettings?.pdfMargin ?? 0.15,
       filename:     `${reportName || 'التقرير_الشهري'}.pdf`,
@@ -212,90 +245,28 @@ export default function MonthlyReport({ incidents, sources, onDelete, onEdit }: 
   };
 
   const handleExportExcel = () => {
-    const excelData: any[][] = [];
+    const htmlContent = generateHTMLReport(true);
     
-    // Title row
-    excelData.push(['التقرير الشهري للأعطال', '', '', '', '', '', '', '', '', '', '', '']);
-    
-    // Headers
-    excelData.push(['التاريخ', 'الإدارة', 'المحطة', 'المعدة', 'رقم المعدة', 'الجهد', 'الفصل', 'التوصيل', 'السبب', 'ملاحظات', 'الموظف', 'الحالة']);
-    
-    // Data rows
-    sortedIncidents.forEach(inc => {
-      excelData.push([
-        inc.date,
-        inc.region,
-        inc.station,
-        inc.equipment,
-        inc.eqNumber,
-        inc.voltage,
-        inc.disconnectTime,
-        inc.status === 'مفصول' ? '-' : (inc.connectTime || '-'),
-        inc.reason,
-        inc.notes || '',
-        inc.employeeName,
-        inc.status
-      ]);
+    // Create a blob using UTF-8 BOM plus the HTML string
+    const blob = new Blob(['\ufeff', htmlContent], {
+      type: 'application/vnd.ms-excel;charset=utf-8'
     });
-
-    // Append Disconnected Lines to Excel
-    const currentRow = excelData.length;
-    excelData.push(['', '', '', '', '', '', '', '', '', '', '', '']);
-    excelData.push(['', '', '', '', '', '', '', '', '', '', '', '']);
     
-    const discTitleRowIndex = excelData.length;
-    excelData.push(['المعدات المفصولة', '', '', '', '', '', '', '', '', '', '', '']);
-    excelData.push(['التاريخ', 'الإدارة', 'المحطة', 'المعدة', 'وقت الفصل', 'السبب والملاحظات', '', '', '', '', '', '']);
-    
-    if (disconnectedIncidents.length > 0) {
-      disconnectedIncidents.forEach(inc => {
-        excelData.push([
-          inc.date,
-          inc.region,
-          inc.station,
-          `${inc.equipment} ${inc.eqNumber} (${inc.voltage} ك.ف)`,
-          inc.disconnectTime,
-          `${inc.reason} - ${inc.notes || ''}`,
-          '', '', '', '', '', ''
-        ]);
-      });
+    // Fallback for older browsers
+    // @ts-ignore
+    if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+      // @ts-ignore
+      window.navigator.msSaveOrOpenBlob(blob, `${reportName || 'التقرير_الشهري'}.xls`);
     } else {
-      excelData.push(['لا توجد خطوط مفصولة', '', '', '', '', '', '', '', '', '', '', '']);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportName || 'التقرير_الشهري'}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
-
-    const worksheet = XLSX.utils.aoa_to_sheet(excelData);
-    worksheet['!dir'] = 'rtl';
-    
-    // Merges
-    worksheet['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 11 } }, // Title
-    ];
-    
-    worksheet['!merges'].push({ s: { r: discTitleRowIndex, c: 0 }, e: { r: discTitleRowIndex, c: 11 } });
-    if (disconnectedIncidents.length === 0) {
-      worksheet['!merges'].push({ s: { r: discTitleRowIndex + 2, c: 0 }, e: { r: discTitleRowIndex + 2, c: 11 } });
-    }
-
-    // Column widths
-    worksheet['!cols'] = [
-      { wch: 12 }, // Date
-      { wch: 15 }, // Region
-      { wch: 20 }, // Station
-      { wch: 15 }, // Eq Name
-      { wch: 10 }, // Eq Number
-      { wch: 10 }, // Voltage
-      { wch: 10 }, // Disconnect
-      { wch: 10 }, // Connect
-      { wch: 25 }, // Reason
-      { wch: 30 }, // Notes
-      { wch: 20 }, // Employee
-      { wch: 10 }  // Status
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "التقرير الشهري");
-    
-    XLSX.writeFile(workbook, `${reportName || 'التقرير_الشهري'}.xlsx`);
   };
 
   const handleWhatsApp = () => {
